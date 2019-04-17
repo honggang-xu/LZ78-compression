@@ -1,72 +1,89 @@
 import java.util.ArrayList;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
 import java.util.Scanner;
 
 public class LZdecode
 {
-	private static ArrayList<String> dict;
+	//a dictionary to store all the phrases
+	private static ArrayList<ArrayList<Byte>> dict;
 
 	public static void main(String [] args)
 	{
-		if (args.length != 1)
+		if (args.length != 2)
 		{
-			System.err.println("Usage: java LZdecode <filename>");
+			System.err.println("Usage: java LZdecode <encoded file> <file name for decoded output>");
 			return;
 		}
 
 		try
 		{
-			dict = new ArrayList<String>();
+			dict = new ArrayList<ArrayList<Byte>>();
 			dict.add(null);
 			Scanner scanner = new Scanner(new File(args[0]));
-			FileWriter file = new FileWriter("decoded.txt");
-			BufferedWriter writer = new BufferedWriter(file);
-			
+			String filename = args[1];
+			BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(new File(filename)));
+			//while there is input
 			while (scanner.hasNext())
 			{
-				System.out.println("into the while loop");
 				int index = -1;
+				//read the index value and if the index is 0
 				if ((index = scanner.nextInt()) == 0)
 				{
-					System.out.println("read an int");
-					//skip the space
-					//scanner.skip(" ");
+					//read the mismatched byte
 					byte data = scanner.nextByte();
-					String word = Character.toString((char)data);
-					dict.add(word);
-					System.out.println(word);
-					writer.write(word);
+					//create a list representing the phrase to store byte
+					ArrayList<Byte> node = new ArrayList<Byte>();
+					//add the mismatched byte to the list
+					node.add(data);
+					//add the list to the dictionary
+					dict.add(node);
+					//write the phrase to output
+					writer.write(data);
 				}
+				//if the index is not 0
 				else
-					//scanner.hasNextInt()
 				{
-					//skip the space
-					//scanner.skip(" ");
-					// if (scanner.hasNextByte())
-					// {
+					//if there is no byte to read next
 					if (!scanner.hasNextByte())
 					{
-						String parent = dict.get(index);
-						System.out.println(parent);
-						writer.write(parent);
+						//use index to find the matching phrase
+						ArrayList<Byte> parent = dict.get(index);
+						//write current phrase to output
+						for (byte value : parent)
+						{
+							writer.write(value);
+						}
 					}
+					//there is a mismatched byte
 					else
 					{
-						String parent = dict.get(index);
+						//use index to find the matching phrase
+						ArrayList<Byte> parent = dict.get(index);
+						//read the mismatched byte
 						byte data = scanner.nextByte();
-						String word = Character.toString((char)data);
-						dict.add(parent + word);
-						System.out.println(parent + word);
-						writer.write(parent + word);
+						//create a list representing the phrase to store byte
+						ArrayList<Byte> childNode = new ArrayList<Byte>();
+						//add the matching phrase to the list
+						for (byte previous : parent)
+						{
+							childNode.add(previous);
+						}
+						//add the mismatched byte to the list
+						childNode.add(data);
+						//add the list to the dictionary
+						dict.add(childNode);
+						//write current phrase to output
+						for (byte value : childNode)
+						{
+							writer.write(value);
+						}
 					}
-						
-					//}
-				
 				}
 			}
-			writer.close();
+			//flush the output stream
+			writer.flush();
 		}
 		catch (Exception e)
 		{
