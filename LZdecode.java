@@ -84,6 +84,7 @@ public class LZdecode
 			}
 			//flush the output stream
 			writer.flush();
+			System.out.println("process finished");
 		}
 		catch (Exception e)
 		{
